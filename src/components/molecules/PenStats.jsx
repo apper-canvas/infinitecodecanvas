@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import ApperIcon from "@/components/ApperIcon";
 
-const PenStats = ({ views, likes, onLike, isLiked = false }) => {
+const PenStats = ({ views, likes, onLike, isLiked = false, showViewCount = true }) => {
   const handleLike = () => {
     if (onLike) {
       onLike();
@@ -14,10 +14,10 @@ const PenStats = ({ views, likes, onLike, isLiked = false }) => {
         <ApperIcon name="Eye" className="w-4 h-4" />
         <span>{views?.toLocaleString() || 0}</span>
       </div>
-      <motion.button
+<motion.button
         onClick={handleLike}
         className={`flex items-center gap-1 transition-colors ${
-          isLiked ? "text-red-400" : "hover:text-red-400"
+          isLiked ? "text-red-400" : "text-slate-400 hover:text-red-400"
         }`}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
@@ -25,8 +25,8 @@ const PenStats = ({ views, likes, onLike, isLiked = false }) => {
         transition={{ duration: 0.3 }}
       >
         <ApperIcon 
-          name={isLiked ? "Heart" : "Heart"} 
-          className={`w-4 h-4 ${isLiked ? "fill-current" : ""}`} 
+          name="Heart"
+          className={`w-4 h-4 ${isLiked ? "fill-current text-red-400" : ""}`} 
         />
         <span>{likes?.toLocaleString() || 0}</span>
       </motion.button>

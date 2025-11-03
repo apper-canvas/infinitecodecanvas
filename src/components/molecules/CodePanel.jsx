@@ -6,18 +6,21 @@ const CodePanel = ({
   code, 
   onChange, 
   language = "html",
-  className 
+  className,
+  readOnly = false
 }) => {
   const [isResizing, setIsResizing] = useState(false);
   const textareaRef = useRef(null);
 
-  const handleChange = (e) => {
-    if (onChange) {
+const handleChange = (e) => {
+    if (onChange && !readOnly) {
       onChange(e.target.value);
     }
   };
 
-  const handleKeyDown = (e) => {
+const handleKeyDown = (e) => {
+    if (readOnly) return;
+    
     if (e.key === "Tab") {
       e.preventDefault();
       const textarea = e.target;
@@ -45,13 +48,16 @@ const CodePanel = ({
         </div>
       </div>
       <div className="flex-1 relative">
-        <textarea
+<textarea
           ref={textareaRef}
           value={code}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
-          className="w-full h-full p-4 bg-transparent text-slate-100 font-mono text-sm resize-none outline-none placeholder:text-slate-500"
-          placeholder={`Write your ${language.toUpperCase()} code here...`}
+          readOnly={readOnly}
+          className={`w-full h-full p-4 bg-transparent text-slate-100 font-mono text-sm resize-none outline-none placeholder:text-slate-500 ${
+            readOnly ? 'cursor-default' : ''
+          }`}
+          placeholder={readOnly ? `${language.toUpperCase()} (Read-only)` : `Write your ${language.toUpperCase()} code here...`}
           spellCheck={false}
           style={{ minHeight: "300px" }}
         />
