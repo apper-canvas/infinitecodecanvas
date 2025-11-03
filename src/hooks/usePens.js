@@ -95,17 +95,25 @@ export const usePenSearch = () => {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [lastSearch, setLastSearch] = useState({ query: "", options: {} });
 
-  const search = async (query) => {
+const search = async (query, options = {}) => {
     if (!query.trim()) {
       setResults([]);
+      setLastSearch({ query: "", options: {} });
       return;
     }
+
+    // Avoid duplicate searches
+    const searchKey = JSON.stringify({ query, options });
+    const lastSearchKey = JSON.stringify(lastSearch);
+    if (searchKey === lastSearchKey) return;
 
     try {
       setLoading(true);
       setError(null);
-      const data = await penService.search(query);
+      setLastSearch({ query, options });
+      const data = await penService.search(query, options);
       setResults(data);
     } catch (err) {
       setError("Search failed. Please try again.");
@@ -115,10 +123,11 @@ export const usePenSearch = () => {
     }
   };
 
-  return {
+return {
     results,
     loading,
     error,
-    search
+    search,
+    lastSearch
   };
 };

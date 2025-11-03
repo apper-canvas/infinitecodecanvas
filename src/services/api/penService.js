@@ -29,15 +29,83 @@ class PenService {
       .slice(0, 10);
   }
 
-  async search(query) {
+async search(query, options = {}) {
     await this.delay(200);
     if (!query.trim()) return [];
     
+    const { sortBy = "recent", filterBy = "all" } = options;
     const searchTerm = query.toLowerCase();
-    return this.pens.filter(pen => 
-      pen.title.toLowerCase().includes(searchTerm) ||
-      pen.author.name.toLowerCase().includes(searchTerm)
-    );
+    
+    // Generate tags for each pen (simulated)
+    const pensWithTags = this.pens.map(pen => ({
+      ...pen,
+      tags: this.generateTags(pen)
+    }));
+    
+    let results = pensWithTags.filter(pen => {
+      switch (filterBy) {
+        case "title":
+          return pen.title.toLowerCase().includes(searchTerm);
+        case "author":
+          return pen.author.name.toLowerCase().includes(searchTerm);
+        case "tags":
+          return pen.tags.some(tag => tag.toLowerCase().includes(searchTerm));
+        case "all":
+        default:
+          return (
+            pen.title.toLowerCase().includes(searchTerm) ||
+            pen.author.name.toLowerCase().includes(searchTerm) ||
+            pen.tags.some(tag => tag.toLowerCase().includes(searchTerm))
+          );
+      }
+    });
+
+    // Sort results
+    results.sort((a, b) => {
+      switch (sortBy) {
+        case "popular":
+          return (b.likes + b.views) - (a.likes + a.views);
+        case "views":
+          return b.views - a.views;
+        case "likes":
+          return b.likes - a.likes;
+        case "recent":
+        default:
+          return new Date(b.createdAt) - new Date(a.createdAt);
+      }
+    });
+
+    return results;
+  }
+
+  generateTags(pen) {
+    const tags = [];
+    const title = pen.title.toLowerCase();
+    
+    // Generate tags based on pen content
+    if (title.includes('css')) tags.push('CSS');
+    if (title.includes('javascript') || title.includes('js')) tags.push('JavaScript');
+    if (title.includes('html')) tags.push('HTML');
+    if (title.includes('animation')) tags.push('Animation');
+    if (title.includes('hover')) tags.push('Hover Effects');
+    if (title.includes('button')) tags.push('Buttons');
+    if (title.includes('card')) tags.push('Cards');
+    if (title.includes('grid')) tags.push('Grid Layout');
+    if (title.includes('canvas')) tags.push('Canvas');
+    if (title.includes('particle')) tags.push('Particles');
+    if (title.includes('color')) tags.push('Colors');
+    if (title.includes('gradient')) tags.push('Gradients');
+    if (title.includes('morph')) tags.push('Morphing');
+    if (title.includes('glass')) tags.push('Glassmorphism');
+    if (title.includes('weather')) tags.push('Weather');
+    if (title.includes('dashboard')) tags.push('Dashboard');
+    if (title.includes('interactive')) tags.push('Interactive');
+    
+    // Add some random popular tags
+    const commonTags = ['UI', 'Design', 'Frontend', 'Creative', 'Modern'];
+    tags.push(...commonTags.slice(0, Math.floor(Math.random() * 3) + 1));
+    
+    return [...new Set(tags)]; // Remove duplicates
   }
 
   async create(penData) {

@@ -1,9 +1,10 @@
-import { useState } from "react";
-import Input from "@/components/atoms/Input";
+import React, { useEffect, useState } from "react";
 import ApperIcon from "@/components/ApperIcon";
+import Input from "@/components/atoms/Input";
 
-const SearchBar = ({ onSearch, placeholder = "Search pens..." }) => {
-  const [query, setQuery] = useState("");
+const SearchBar = ({ onSearch, placeholder = "Search pens...", defaultValue = "" }) => {
+  const [query, setQuery] = useState(defaultValue);
+  const [debouncedQuery, setDebouncedQuery] = useState(defaultValue);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -11,10 +12,26 @@ const SearchBar = ({ onSearch, placeholder = "Search pens..." }) => {
   };
 
   const handleChange = (e) => {
-    const value = e.target.value;
+const value = e.target.value;
     setQuery(value);
-    onSearch(value);
   };
+
+  // Debounce search to avoid too many API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(query);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  useEffect(() => {
+    onSearch(debouncedQuery);
+  }, [debouncedQuery, onSearch]);
+
+  useEffect(() => {
+    setQuery(defaultValue);
+  }, [defaultValue]);
 
   return (
     <form onSubmit={handleSubmit} className="relative flex-1 max-w-md">
@@ -25,7 +42,8 @@ const SearchBar = ({ onSearch, placeholder = "Search pens..." }) => {
         />
         <Input
           type="search"
-          placeholder={placeholder}
+placeholder={placeholder}
+          value={query}
           value={query}
           onChange={handleChange}
           className="pl-10 pr-4"

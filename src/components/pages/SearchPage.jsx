@@ -11,23 +11,40 @@ import { usePenSearch } from "@/hooks/usePens";
 
 const SearchPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const query = searchParams.get("q") || "";
+const query = searchParams.get("q") || "";
+  const sortBy = searchParams.get("sort") || "recent";
+  const filterBy = searchParams.get("filter") || "all";
   const { results, loading, error, search } = usePenSearch();
   const [hasSearched, setHasSearched] = useState(false);
 
-  useEffect(() => {
+useEffect(() => {
     if (query) {
-      search(query);
+      search(query, { sortBy, filterBy });
       setHasSearched(true);
     }
-  }, [query, search]);
+  }, [query, sortBy, filterBy, search]);
 
-  const handleSearch = (newQuery) => {
+const handleSearch = (newQuery) => {
+    const params = new URLSearchParams(searchParams);
     if (newQuery.trim()) {
-      setSearchParams({ q: newQuery });
+      params.set("q", newQuery);
+      setSearchParams(params);
     } else {
-      setSearchParams({});
+      params.delete("q");
+      setSearchParams(params);
     }
+  };
+
+  const handleSortChange = (newSort) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("sort", newSort);
+    setSearchParams(params);
+  };
+
+  const handleFilterChange = (newFilter) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("filter", newFilter);
+    setSearchParams(params);
   };
 
   return (
@@ -49,37 +66,106 @@ const SearchPage = () => {
           </div>
           
           <div className="max-w-2xl mx-auto mb-8">
-            <SearchBar 
+<SearchBar 
               onSearch={handleSearch} 
-              placeholder="Search by title or author..."
+              placeholder="Search by keywords, tags, or author name..."
+              defaultValue={query}
             />
           </div>
 
+{/* Advanced Filters */}
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Search in:
+              </label>
+              <select 
+                value={filterBy}
+                onChange={(e) => handleFilterChange(e.target.value)}
+                className="w-full bg-surface border border-slate-600 rounded-lg px-3 py-2 text-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
+              >
+                <option value="all">All Content</option>
+                <option value="title">Titles Only</option>
+                <option value="author">Authors Only</option>
+                <option value="tags">Tags Only</option>
+              </select>
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Sort by:
+              </label>
+              <select 
+                value={sortBy}
+                onChange={(e) => handleSortChange(e.target.value)}
+                className="w-full bg-surface border border-slate-600 rounded-lg px-3 py-2 text-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
+              >
+                <option value="recent">Most Recent</option>
+                <option value="popular">Most Popular</option>
+                <option value="views">Most Viewed</option>
+                <option value="likes">Most Liked</option>
+              </select>
+            </div>
+          </div>
+
           {query && (
-            <p className="text-slate-400 text-lg">
-              {results.length} result{results.length !== 1 ? "s" : ""} for "{query}"
-            </p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-2">
+              <p className="text-slate-400 text-lg">
+                {results.length} result{results.length !== 1 ? "s" : ""} for "{query}"
+              </p>
+              <div className="flex items-center gap-2 text-sm text-slate-500">
+                <span>Filtered by:</span>
+                <span className="px-2 py-1 bg-slate-700 rounded-full capitalize">{filterBy}</span>
+                <span>•</span>
+                <span className="px-2 py-1 bg-slate-700 rounded-full">
+                  {sortBy === "recent" ? "Most Recent" : 
+                   sortBy === "popular" ? "Most Popular" :
+                   sortBy === "views" ? "Most Viewed" : "Most Liked"}
+                </span>
+              </div>
+            </div>
           )}
         </motion.div>
 
-        {loading ? (
+{loading ? (
           <Loading type="cards" />
         ) : error ? (
-          <Error message={error} onRetry={() => search(query)} />
+          <Error message={error} onRetry={() => search(query, { sortBy, filterBy })} />
         ) : !hasSearched ? (
           <div className="text-center py-16">
             <div className="w-24 h-24 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-6">
               <ApperIcon name="Search" className="w-12 h-12 text-slate-500" />
             </div>
-            <h2 className="text-2xl font-semibold text-slate-300 mb-4">Start Searching</h2>
-            <p className="text-slate-500 max-w-md mx-auto">
-              Enter a search term above to find pens by title or author name
+            <h2 className="text-2xl font-semibold text-slate-300 mb-4">Advanced Search</h2>
+            <p className="text-slate-500 max-w-lg mx-auto mb-6">
+              Search for pens by keywords, tags, or author names. Use the filters above to refine your results.
             </p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-md mx-auto text-sm">
+              <div className="bg-slate-800 rounded-lg p-3">
+                <ApperIcon name="Hash" className="w-4 h-4 text-primary-400 mx-auto mb-1" />
+                <div className="text-slate-300 font-medium">Keywords</div>
+                <div className="text-slate-500 text-xs">Search titles</div>
+              </div>
+              <div className="bg-slate-800 rounded-lg p-3">
+                <ApperIcon name="Tag" className="w-4 h-4 text-secondary-400 mx-auto mb-1" />
+                <div className="text-slate-300 font-medium">Tags</div>
+                <div className="text-slate-500 text-xs">Find by tags</div>
+              </div>
+              <div className="bg-slate-800 rounded-lg p-3">
+                <ApperIcon name="User" className="w-4 h-4 text-accent-400 mx-auto mb-1" />
+                <div className="text-slate-300 font-medium">Authors</div>
+                <div className="text-slate-500 text-xs">By creator</div>
+              </div>
+              <div className="bg-slate-800 rounded-lg p-3">
+                <ApperIcon name="SortDesc" className="w-4 h-4 text-primary-400 mx-auto mb-1" />
+                <div className="text-slate-300 font-medium">Sort</div>
+                <div className="text-slate-500 text-xs">Multiple options</div>
+              </div>
+            </div>
           </div>
         ) : results.length === 0 ? (
           <Empty 
             title={`No results for "${query}"`}
-            description="Try adjusting your search terms or create your own pen"
+            description="Try adjusting your search terms, filters, or create your own pen"
             actionText="Create New Pen"
             actionLink="/editor"
           />
